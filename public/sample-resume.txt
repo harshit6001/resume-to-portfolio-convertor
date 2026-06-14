@@ -1,0 +1,42 @@
+Alex Chen
+Software Engineer | alex.chen@email.com | github.com/alexchen | linkedin.com/in/alexchen
+San Francisco, CA
+
+SUMMARY
+Full-stack software engineer with 3+ years building scalable web applications. Passionate about clean code, user experience, and shipping products that matter.
+
+SKILLS
+Languages: JavaScript, TypeScript, Python, SQL
+Frameworks: React, Next.js, Node.js, Express, PostgreSQL
+Tools: Git, Docker, AWS, CI/CD, Figma
+
+EXPERIENCE
+Senior Software Engineer — TechFlow Inc
+Jan 2023 — Present
+- Led migration of monolithic app to microservices, reducing deployment time by 60%
+- Built real-time dashboard serving 50K+ daily active users
+- Mentored 2 junior developers on React best practices and code review standards
+
+Software Engineer — StartupXYZ
+Jun 2021 — Dec 2022
+- Developed REST APIs handling 1M+ requests per day with 99.9% uptime
+- Implemented authentication system using OAuth 2.0 and JWT
+- Reduced page load time by 40% through code splitting and lazy loading
+
+PROJECTS
+TaskFlow — Project Management SaaS
+Built a full-stack project management tool with real-time collaboration features.
+Technologies: Next.js, PostgreSQL, WebSockets, Tailwind CSS
+- Shipped MVP in 8 weeks with 200+ beta users
+- Implemented drag-and-drop kanban boards with optimistic UI updates
+
+DevMetrics — Developer Analytics Dashboard
+Open-source dashboard for tracking team velocity and code quality metrics.
+Technologies: React, D3.js, Node.js
+- 500+ GitHub stars and 50+ contributors
+- Integrated with GitHub API for automated PR and commit analysis
+
+EDUCATION
+B.S. Computer Science — University of California, Berkeley
+2017 — 2021
+GPA: 3.7/4.0 | Relevant coursework: Algorithms, Distributed Systems, Machine Learning
