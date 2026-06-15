@@ -140,18 +140,20 @@ export function BuilderApp() {
     error,
     editedData,
     selectedTemplate,
+    accentColor,
+    setTemplate,
+    setAccentColor,
     tone,
     aiEnabled,
     contentGaps,
     setProcessing,
     setError,
     setPipelineResult,
-    setTemplate,
-    setTone,
     applyEditedData,
     versions,
     saveVersion,
     reset,
+    setTone,
   } = usePortfolioStore();
 
   const [processingMsg, setProcessingMsg] = useState(PROCESSING_STEPS[0]);
@@ -214,6 +216,15 @@ export function BuilderApp() {
       const json = await res.json();
       if (res.ok && json.edited) {
         applyEditedData(json.edited);
+        
+        // Sync AI-driven UI overrides into Builder app state
+        if (json.edited.uiOverrides?.accentColor !== undefined) {
+          setAccentColor(json.edited.uiOverrides.accentColor);
+        }
+        if (json.edited.uiOverrides?.template) {
+          setTemplate(json.edited.uiOverrides.template);
+        }
+
         const shortPrompt = activePrompt.length > 25 ? activePrompt.slice(0, 25) + "..." : activePrompt;
         saveVersion(`v${versions.length + 1} - AI Prompt: "${shortPrompt}"`);
         setCopilotPrompt("");
@@ -280,17 +291,17 @@ export function BuilderApp() {
 
   const handleDownloadHtml = async () => {
     if (!editedData) return;
-    await downloadPortfolioWebsiteZip(editedData, selectedTemplate);
+    await downloadPortfolioWebsiteZip(editedData, selectedTemplate, accentColor);
   };
 
   const handleDownloadZip = async () => {
     if (!editedData) return;
-    await downloadPortfolioZip(editedData, selectedTemplate);
+    await downloadPortfolioZip(editedData, selectedTemplate, accentColor);
   };
 
   const handleOpenPreview = () => {
     if (!editedData) return;
-    const html = generatePortfolioHTML(editedData, selectedTemplate);
+    const html = generatePortfolioHTML(editedData, selectedTemplate, false, accentColor);
     const blob = new Blob([html], { type: "text/html" });
     const url = URL.createObjectURL(blob);
     window.open(url, "_blank");
@@ -480,11 +491,41 @@ export function BuilderApp() {
             </Card>
           )}
 
-          <div className="mb-6">
-            <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-zinc-500">
-              Template
-            </p>
+          <div className="mb-4">
+            <label className="text-xs font-semibold uppercase tracking-wider text-zinc-500 mb-1.5 block">
+              🎨 Style Theme
+            </label>
             <StyleSelector selected={selectedTemplate} onSelect={setTemplate} />
+          </div>
+
+          <div className="mb-6">
+            <label className="text-xs font-semibold uppercase tracking-wider text-zinc-500 mb-1.5 block">
+              🖌️ Accent Color
+            </label>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setAccentColor("violet")}
+                className={`h-8 w-8 rounded-full bg-violet-500 transition-all ${accentColor === "violet" ? "ring-2 ring-white scale-110" : "opacity-60 hover:opacity-100"} cursor-pointer shadow-lg`}
+                title="Violet"
+              />
+              <button
+                onClick={() => setAccentColor("emerald")}
+                className={`h-8 w-8 rounded-full bg-emerald-500 transition-all ${accentColor === "emerald" ? "ring-2 ring-white scale-110" : "opacity-60 hover:opacity-100"} cursor-pointer shadow-lg`}
+                title="Emerald"
+              />
+              <button
+                onClick={() => setAccentColor("amber")}
+                className={`h-8 w-8 rounded-full bg-amber-500 transition-all ${accentColor === "amber" ? "ring-2 ring-white scale-110" : "opacity-60 hover:opacity-100"} cursor-pointer shadow-lg`}
+                title="Amber"
+              />
+              <button
+                onClick={() => setAccentColor(null)}
+                className={`h-8 px-3 rounded-full bg-zinc-800 transition-all text-xs text-zinc-400 border border-zinc-700 hover:bg-zinc-700 cursor-pointer ${accentColor === null ? "ring-2 ring-white scale-105 text-white" : ""}`}
+                title="Default for theme"
+              >
+                Default
+              </button>
+            </div>
           </div>
 
           <div className="mb-6">
@@ -544,7 +585,7 @@ export function BuilderApp() {
         </aside>
 
         <div className="flex-1 overflow-hidden">
-          <PreviewPanel data={editedData} style={selectedTemplate} />
+          <PreviewPanel data={editedData} style={selectedTemplate} accentColor={accentColor} />
         </div>
 
         {autoEnhancing && (

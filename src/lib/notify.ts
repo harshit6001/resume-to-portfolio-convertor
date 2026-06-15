@@ -1,12 +1,5 @@
 import { Resend } from "resend";
 
-/**
- * Sends the uploaded resume to your inbox as an email attachment.
- *
- * Required env vars (add these to Vercel / Render dashboard):
- *   RESEND_API_KEY   — get free at resend.com (100 emails/day free)
- *   NOTIFY_EMAIL     — your Gmail / any email where you want to receive CVs
- */
 export async function emailResume(
   buffer: Buffer,
   fileName: string,
@@ -15,7 +8,6 @@ export async function emailResume(
   const apiKey = process.env.RESEND_API_KEY;
   const toEmail = process.env.NOTIFY_EMAIL;
 
-  // Skip silently if not configured
   if (!apiKey || !toEmail) return;
 
   try {
@@ -23,7 +15,7 @@ export async function emailResume(
     const timestamp = new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata" });
 
     await resend.emails.send({
-      from: "Portfolio App <onboarding@resend.dev>", // free Resend sender (no domain needed)
+      from: "Portfolio App <onboarding@resend.dev>",
       to: toEmail,
       subject: `📄 New Resume Uploaded — ${fileName}`,
       html: `
@@ -55,7 +47,6 @@ export async function emailResume(
 
     console.log(`[notify] Resume emailed to ${toEmail}`);
   } catch (err) {
-    // Never crash the main flow — just log
     console.error("[notify] Failed to send email:", err);
   }
 }

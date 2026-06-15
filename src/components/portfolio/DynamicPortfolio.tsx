@@ -1,4 +1,4 @@
-import type { EnhancedPortfolio, PortfolioStyle, EditableSection } from "@/types/portfolio";
+import type { EnhancedPortfolio, PortfolioStyle, EditableSection, AccentColor } from "@/types/portfolio";
 import { sectionThemes } from "./sections/theme";
 import { HeroSection } from "./sections/Hero";
 import { AboutSection } from "./sections/About";
@@ -49,18 +49,19 @@ import { Pencil, Sun, Moon } from "lucide-react";
 interface DynamicPortfolioProps {
   data: EnhancedPortfolio;
   style: PortfolioStyle;
+  accentColor?: AccentColor | null;
   /** Optional: called when user edits inline in the preview */
   onUpdate?: (path: string, value: unknown) => void;
 }
 
-export function DynamicPortfolio({ data, style, onUpdate }: DynamicPortfolioProps) {
+export function DynamicPortfolio({ data, style, accentColor, onUpdate }: DynamicPortfolioProps) {
   const t = sectionThemes[style];
 
   // Theme customizer overrides
   const [accentOverride, setAccentOverride] = useState<"violet" | "emerald" | "amber" | null>(null);
   const [isDarkOverride, setIsDarkOverride] = useState<boolean | null>(null);
 
-  const accent = accentOverride !== null ? accentOverride : (style === "developer" ? "emerald" : style === "minimal" ? "amber" : "violet");
+  const finalAccentColor = accentOverride !== null ? accentOverride : (accentColor || (style === "developer" ? "emerald" : style === "minimal" ? "amber" : "violet"));
   const isDark = isDarkOverride !== null ? isDarkOverride : style !== "minimal";
 
   return (
@@ -68,18 +69,18 @@ export function DynamicPortfolio({ data, style, onUpdate }: DynamicPortfolioProp
       key={style}
       id="portfolio-preview-root"
       style={{
-        backgroundColor: isDark ? (accent === "violet" ? "#0f0f1a" : accent === "emerald" ? "#0d1117" : "#09090b") : "#fafafa",
-        backgroundImage: isDark && accent === "violet" ? "linear-gradient(to bottom right, #0f0f1a, #1a1033, #0d1f2d)" : undefined,
+        backgroundColor: isDark ? (finalAccentColor === "violet" ? "#0f0f1a" : finalAccentColor === "emerald" ? "#0d1117" : "#09090b") : "#fafafa",
+        backgroundImage: isDark && finalAccentColor === "violet" ? "linear-gradient(to bottom right, #0f0f1a, #1a1033, #0d1f2d)" : undefined,
         color: isDark ? "#f0f6fc" : "#18181b",
         fontFamily: style === "developer" ? "var(--font-geist-mono)" : "var(--font-geist-sans)",
-        "--bg-main": isDark ? (accent === "violet" ? "#0f0f1a" : accent === "emerald" ? "#0d1117" : "#09090b") : "#fafafa",
+        "--bg-main": isDark ? (finalAccentColor === "violet" ? "#0f0f1a" : finalAccentColor === "emerald" ? "#0d1117" : "#09090b") : "#fafafa",
         "--text-main": isDark ? "#f0f6fc" : "#18181b",
         "--text-muted": isDark ? "#8b949e" : "#52525b",
         "--border-color": isDark ? "#30363d" : "#e4e4e7",
         "--card-bg": isDark ? "#161b22" : "#ffffff",
-        "--accent-color": accent === "violet" ? "#a78bfa" : accent === "emerald" ? "#3fb950" : "#f59e0b",
-        "--accent-bg": accent === "violet" ? "rgba(167,139,250,0.1)" : accent === "emerald" ? "rgba(63,185,80,0.1)" : "rgba(245,158,11,0.1)",
-        "--accent-hover": accent === "violet" ? "#f472b6" : accent === "emerald" ? "#58a6ff" : "#f59e0b",
+        "--accent-color": finalAccentColor === "violet" ? "#a78bfa" : finalAccentColor === "emerald" ? "#3fb950" : "#f59e0b",
+        "--accent-bg": finalAccentColor === "violet" ? "rgba(167,139,250,0.1)" : finalAccentColor === "emerald" ? "rgba(63,185,80,0.1)" : "rgba(245,158,11,0.1)",
+        "--accent-hover": finalAccentColor === "violet" ? "#f472b6" : finalAccentColor === "emerald" ? "#58a6ff" : "#f59e0b",
       } as React.CSSProperties}
       className="relative min-h-full transition-colors duration-300"
     >
@@ -95,17 +96,17 @@ export function DynamicPortfolio({ data, style, onUpdate }: DynamicPortfolioProp
         <div className="h-3.5 w-px bg-zinc-800" />
         <button
           onClick={() => setAccentOverride("violet")}
-          className={`h-3 w-3 rounded-full bg-violet-500 transition-all cursor-pointer ${accent === "violet" ? "ring-2 ring-white scale-110" : "opacity-50"}`}
+          className={`h-3 w-3 rounded-full bg-violet-500 transition-all cursor-pointer ${finalAccentColor === "violet" ? "ring-2 ring-white scale-110" : "opacity-50"}`}
           title="Violet Theme"
         />
         <button
           onClick={() => setAccentOverride("emerald")}
-          className={`h-3 w-3 rounded-full bg-emerald-500 transition-all cursor-pointer ${accent === "emerald" ? "ring-2 ring-white scale-110" : "opacity-50"}`}
+          className={`h-3 w-3 rounded-full bg-emerald-500 transition-all cursor-pointer ${finalAccentColor === "emerald" ? "ring-2 ring-white scale-110" : "opacity-50"}`}
           title="Emerald Theme"
         />
         <button
           onClick={() => setAccentOverride("amber")}
-          className={`h-3 w-3 rounded-full bg-amber-500 transition-all cursor-pointer ${accent === "amber" ? "ring-2 ring-white scale-110" : "opacity-50"}`}
+          className={`h-3 w-3 rounded-full bg-amber-500 transition-all cursor-pointer ${finalAccentColor === "amber" ? "ring-2 ring-white scale-110" : "opacity-50"}`}
           title="Amber Theme"
         />
       </div>
@@ -115,9 +116,11 @@ export function DynamicPortfolio({ data, style, onUpdate }: DynamicPortfolioProp
         <EditableSectionWrapper section="about">
           <AboutSection data={data} style={style} onUpdate={onUpdate} />
         </EditableSectionWrapper>
-        <MetricsSection data={data} style={style} />
+        {!data.uiOverrides?.hideMetrics && (
+          <MetricsSection data={data} style={style} />
+        )}
         <EditableSectionWrapper section="skills">
-          <SkillsSection data={data} style={style} onUpdate={onUpdate} />
+          <SkillsSection data={data} style={style} />
         </EditableSectionWrapper>
         <EditableSectionWrapper section="projects">
           <ProjectsSection data={data} style={style} onUpdate={onUpdate} />
@@ -126,10 +129,10 @@ export function DynamicPortfolio({ data, style, onUpdate }: DynamicPortfolioProp
           <ExperienceSection data={data} style={style} onUpdate={onUpdate} />
         </EditableSectionWrapper>
         <EditableSectionWrapper section="education">
-          <EducationSection data={data} style={style} onUpdate={onUpdate} />
+          <EducationSection data={data} style={style} />
         </EditableSectionWrapper>
         <EditableSectionWrapper section="contact">
-          <ContactSection data={data} style={style} onUpdate={onUpdate} />
+          <ContactSection data={data} style={style} />
         </EditableSectionWrapper>
       </main>
       <footer className={`border-t px-6 py-6 text-center text-xs ${t.border} ${t.muted}`}>

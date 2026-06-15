@@ -1,15 +1,16 @@
 /* eslint-disable @next/next/no-img-element */
 import { useState } from "react";
 import type { EnhancedPortfolio, PortfolioStyle } from "@/types/portfolio";
-import { ExternalLink, FolderGit2, Sparkles, Search } from "lucide-react";
+import { ExternalLink, FolderGit2, Sparkles, Search, Camera, Upload } from "lucide-react";
 import { sectionThemes } from "./theme";
 
 interface ProjectsSectionProps {
   data: EnhancedPortfolio;
   style: PortfolioStyle;
+  onUpdate?: (path: string, value: unknown) => void;
 }
 
-export function ProjectsSection({ data, style }: ProjectsSectionProps) {
+export function ProjectsSection({ data, style, onUpdate }: ProjectsSectionProps) {
   const t = sectionThemes[style];
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -193,20 +194,59 @@ export function ProjectsSection({ data, style }: ProjectsSectionProps) {
           /* 2. Designer / Creative Style */
           <div className="grid gap-6 sm:grid-cols-2">
             {filteredProjects.map((p, idx) => {
-              const imgUrl = `/project${(idx % 3) + 1}.png`;
+              const imgUrl = p.imageUrl || `/project${(idx % 3) + 1}.png`;
               return (
                 <article
                   key={idx}
                   className="group relative overflow-hidden rounded-2xl border border-[var(--border-color)] bg-[var(--card-bg)] transition-all duration-300 hover:-translate-y-1 hover:border-[var(--accent-color)]/45 hover:shadow-[0_0_20px_rgba(167,139,250,0.1)]"
                 >
                   {/* Visual Project Mockup Header */}
-                  <div className="relative h-40 w-full overflow-hidden bg-zinc-950/80">
+                  <div className="relative h-40 w-full overflow-hidden bg-zinc-950/80 group/img">
                     <img
                       src={imgUrl}
                       alt={p.name}
                       className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-zinc-950/80 via-transparent to-transparent" />
+                    
+                    {onUpdate && (
+                      <div className="absolute inset-0 bg-black/65 opacity-0 group-hover/img:opacity-100 transition-opacity duration-200 flex items-center justify-center gap-3">
+                        <label className="flex items-center justify-center p-2 rounded-full bg-zinc-900/90 text-white border border-zinc-700 hover:bg-zinc-800 hover:scale-105 transition-all cursor-pointer" title="Upload custom project image">
+                          <Camera className="h-4 w-4" />
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (!file) return;
+                              const reader = new FileReader();
+                              reader.onload = () => {
+                                if (typeof reader.result === "string") {
+                                  onUpdate(`projects.${idx}.imageUrl`, reader.result);
+                                }
+                              };
+                              reader.readAsDataURL(file);
+                            }}
+                            className="hidden"
+                          />
+                        </label>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const promptStr = window.prompt("Enter prompt to generate project image (e.g. 'minimalist logo, startup style'):");
+                            if (promptStr) {
+                              const encoded = encodeURIComponent(promptStr.trim());
+                              const genUrl = `https://image.pollinations.ai/prompt/${encoded}?width=600&height=400&nologo=true&private=true`;
+                              onUpdate(`projects.${idx}.imageUrl`, genUrl);
+                            }
+                          }}
+                          className="p-2 rounded-full bg-indigo-900/90 text-indigo-300 border border-indigo-700 hover:bg-indigo-850 hover:text-white hover:scale-105 transition-all"
+                          title="AI Generate Project Image"
+                        >
+                          <Sparkles className="h-4 w-4" />
+                        </button>
+                      </div>
+                    )}
                   </div>
 
                   <div className="p-6">
@@ -261,16 +301,54 @@ export function ProjectsSection({ data, style }: ProjectsSectionProps) {
           /* 3. Student / General Style */
           <div className="space-y-6">
             {filteredProjects.map((p, idx) => {
-              const imgUrl = `/project${(idx % 3) + 1}.png`;
+              const imgUrl = p.imageUrl || `/project${(idx % 3) + 1}.png`;
               return (
                 <article key={idx} className="rounded-xl border border-[var(--border-color)] bg-[var(--card-bg)] p-6 shadow-sm hover-lift">
                   <div className="grid md:grid-cols-3 gap-6">
-                    <div className="md:col-span-1 h-48 md:h-32 overflow-hidden rounded-lg border border-[var(--border-color)] bg-[var(--bg-main)] shrink-0 relative group">
+                    <div className="md:col-span-1 h-48 md:h-32 overflow-hidden rounded-lg border border-[var(--border-color)] bg-[var(--bg-main)] shrink-0 relative group/img">
                       <img
                         src={imgUrl}
                         alt={p.name}
-                        className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                        className="h-full w-full object-cover transition-transform duration-350 group-hover/img:scale-105"
                       />
+                      {onUpdate && (
+                        <div className="absolute inset-0 bg-black/65 opacity-0 group-hover/img:opacity-100 transition-opacity duration-200 flex items-center justify-center gap-3">
+                          <label className="flex items-center justify-center p-2 rounded-full bg-zinc-900/90 text-white border border-zinc-700 hover:bg-zinc-800 hover:scale-105 transition-all cursor-pointer" title="Upload custom project image">
+                            <Camera className="h-3.5 w-3.5" />
+                            <input
+                              type="file"
+                              accept="image/*"
+                              onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (!file) return;
+                                const reader = new FileReader();
+                                reader.onload = () => {
+                                  if (typeof reader.result === "string") {
+                                    onUpdate(`projects.${idx}.imageUrl`, reader.result);
+                                  }
+                                };
+                                reader.readAsDataURL(file);
+                              }}
+                              className="hidden"
+                            />
+                          </label>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const promptStr = window.prompt("Enter prompt to generate project image (e.g. 'minimalist logo, startup style'):");
+                              if (promptStr) {
+                                const encoded = encodeURIComponent(promptStr.trim());
+                                const genUrl = `https://image.pollinations.ai/prompt/${encoded}?width=600&height=400&nologo=true&private=true`;
+                                onUpdate(`projects.${idx}.imageUrl`, genUrl);
+                              }
+                            }}
+                            className="p-2 rounded-full bg-indigo-900/90 text-indigo-300 border border-indigo-700 hover:bg-indigo-850 hover:text-white hover:scale-105 transition-all"
+                            title="AI Generate Project Image"
+                          >
+                            <Sparkles className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+                      )}
                     </div>
                     <div className="md:col-span-2 flex flex-col justify-between">
                       <div>

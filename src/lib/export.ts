@@ -74,14 +74,15 @@ function extractMetrics(data: EnhancedPortfolio): MetricItem[] {
 }
 
 export function generatePortfolioHTML(
-  portfolio: EnhancedPortfolio,
+  data: EnhancedPortfolio,
   style: PortfolioStyle,
-  externalCSS = false
+  externalCSS = false,
+  accentColor?: "violet" | "emerald" | "amber" | null
 ): string {
-  const { seo, name, tagline, about, skills, projects, experience, education, contact } =
-    portfolio;
+  const { seo, name, title, tagline, about, skills, projects, experience, education, contact } =
+    data;
 
-
+  const scriptTag = accentColor ? `<script>window.accent = "${accentColor}";</script>` : "";
 
   const isDevStyle = style === "developer";
   const isCreativeStyle = style === "creative";
@@ -142,7 +143,7 @@ export function generatePortfolioHTML(
           })
           .join("");
 
-        const imgUrl = `./project${(idx % 3) + 1}.png`;
+        const imgUrl = p.imageUrl || `./project${(idx % 3) + 1}.png`;
 
         if (isDevStyle) {
           return `
@@ -262,7 +263,7 @@ export function generatePortfolioHTML(
           <h1><span class="keyword">const</span> <span class="variable">${name.split(" ")[0].toLowerCase()}</span> = {
             <div class="indent">
               name: <span class="val">"${escapeHtml(name)}"</span>,<br/>
-              title: <span class="val">"${escapeHtml(portfolio.title || 'Software Architect')}"</span>
+              title: <span class="val">"${escapeHtml(title || 'Software Architect')}"</span>
             </div>
           };</h1>
           <p class="editor-comment">// biography: ${escapeHtml(tagline)}</p>
@@ -285,7 +286,7 @@ export function generatePortfolioHTML(
     <div class="creative-badge">✦ Creative Portfolio</div>
     <h1>${escapeHtml(name)}</h1>
     <p class="tagline">${escapeHtml(tagline)}</p>
-    <div class="creative-sub">${escapeHtml(portfolio.title || 'Visual Designer')}</div>
+    <div class="creative-sub">${escapeHtml(title || 'Visual Designer')}</div>
     <a href="#contact" class="cta">Get in Touch</a>`;
   } else {
     heroContentHtml = `
@@ -293,7 +294,7 @@ export function generatePortfolioHTML(
       <div class="minimal-hero-text">
         <p class="eyebrow">Professional Profile</p>
         <h1>${escapeHtml(name)}</h1>
-        <p class="tagline">${escapeHtml(portfolio.title || 'Aspiring Specialist')}</p>
+        <p class="tagline">${escapeHtml(title || 'Aspiring Specialist')}</p>
         <p class="tagline-sub">${escapeHtml(tagline)}</p>
         <a href="#contact" class="cta">Get in Touch</a>
       </div>
@@ -324,7 +325,7 @@ export function generatePortfolioHTML(
     </div>`;
   }
 
-  const metrics = extractMetrics(portfolio);
+  const metrics = extractMetrics(data);
   const metricsHtml = metrics
     .map((item, idx) => {
       if (isDevStyle) {
@@ -356,7 +357,7 @@ export function generatePortfolioHTML(
     })
     .join("");
 
-  const metricsSectionHtml = `
+  const metricsSectionHtml = data.uiOverrides?.hideMetrics ? "" : `
     <section id="metrics" class="section">
       <h2>${isDevStyle ? '## impact_metrics/' : 'Key Impact Metrics'}</h2>
       <div class="metrics-grid">${metricsHtml}</div>
@@ -378,13 +379,10 @@ export function generatePortfolioHTML(
   ${externalCSS ? '<link rel="stylesheet" href="style.css" />' : `<style>${styleConfig.css}</style>`}
 </head>
 <body>
-  <!-- Floating Theme / Mode Selector -->
   <div class="theme-customizer">
-    <button id="toggle-mode" title="Toggle Light/Dark Mode">☀️</button>
-    <div class="divider"></div>
-    <button class="color-dot color-violet" onclick="setAccent('violet')" title="Violet Theme"></button>
-    <button class="color-dot color-emerald" onclick="setAccent('emerald')" title="Emerald Theme"></button>
-    <button class="color-dot color-amber" onclick="setAccent('amber')" title="Amber Theme"></button>
+    <button id="theme-toggle-btn" onclick="toggleThemeMode()" title="Toggle Dark/Light Mode">
+      <!-- Icon is dynamically injected -->
+    </button>
   </div>
 
   <header class="hero" id="home">
@@ -494,7 +492,7 @@ export function generatePortfolioHTML(
   <script>
     (function() {
       // 1. Theme accent and mode switching
-      window.accent = '${isDevStyle ? "emerald" : isCreativeStyle ? "violet" : "amber"}';
+      window.accent = '${accentColor || (isDevStyle ? "emerald" : isCreativeStyle ? "violet" : "amber")}';
       window.isDark = ${isDevStyle || isCreativeStyle};
       const root = document.documentElement;
 
@@ -505,14 +503,12 @@ export function generatePortfolioHTML(
           root.style.setProperty('--text-muted', '#8b949e');
           root.style.setProperty('--border-color', '#30363d');
           root.style.setProperty('--card-bg', '#161b22');
-          document.getElementById('toggle-mode').innerText = '☀️';
         } else {
           root.style.setProperty('--bg-main', '#fafafa');
           root.style.setProperty('--text-main', '#18181b');
           root.style.setProperty('--text-muted', '#52525b');
           root.style.setProperty('--border-color', '#e4e4e7');
           root.style.setProperty('--card-bg', '#ffffff');
-          document.getElementById('toggle-mode').innerText = '🌙';
         }
 
         let accColor = '#7c3aed';
@@ -533,20 +529,18 @@ export function generatePortfolioHTML(
         root.style.setProperty('--accent-hover', accHover);
         root.style.setProperty('--accent-alt', window.accent === 'emerald' ? '#3fb950' : accHover);
 
-        document.querySelectorAll('.color-dot').forEach(dot => {
-          dot.classList.remove('active');
-        });
-        const activeDot = document.querySelector('.color-' + window.accent);
-        if (activeDot) activeDot.classList.add('active');
+        const toggleBtn = document.getElementById('theme-toggle-btn');
+        if (toggleBtn) {
+          if (window.isDark) {
+            toggleBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-sun" style="color: #f59e0b;"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>';
+          } else {
+            toggleBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-moon" style="color: var(--accent-color); fill: var(--accent-color);"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>';
+          }
+        }
       }
 
-      document.getElementById('toggle-mode').addEventListener('click', () => {
+      window.toggleThemeMode = function() {
         window.isDark = !window.isDark;
-        applyTheme();
-      });
-
-      window.setAccent = function(color) {
-        window.accent = color;
         applyTheme();
       };
 
@@ -727,12 +721,13 @@ export function generatePortfolioHTML(
 </html>`;
 }
 
-function escapeHtml(text: string): string {
-  return text
+function escapeHtml(text: string | null | undefined): string {
+  if (text === null || text === undefined) return "";
+  return String(text)
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
-.replace(/"/g, "&quot;");
+    .replace(/"/g, "&quot;");
 }
 
 export function getStyleConfig(
@@ -839,18 +834,9 @@ export function getStyleConfig(
     footer { text-align: center; padding: 1.75rem; font-size: 0.8rem; opacity: 0.6; border-top: 1px solid var(--border-color); }
 
     /* ── Theme Customizer ── */
-    .theme-customizer { position: fixed; top: 1.25rem; right: 1.5rem; z-index: 1000; display: flex; align-items: center; gap: 0.4rem; padding: 0.35rem 0.75rem; border-radius: 999px; background: rgba(0,0,0,0.88); border: 1px solid rgba(255,255,255,0.18); backdrop-filter: blur(10px); box-shadow: 0 4px 16px rgba(0,0,0,0.4); }
-    /* Only non-color buttons get no background */
-    .theme-customizer button:not(.color-dot) { background: none; border: none; cursor: pointer; padding: 0.2rem; display: flex; align-items: center; justify-content: center; color: white; }
-    .theme-customizer .divider { width: 1px; height: 1.1rem; background: rgba(255,255,255,0.25); margin: 0 0.2rem; }
-    /* Color dot buttons — must not be overridden by the generic button rule */
-    .color-dot { width: 1rem; height: 1rem; border-radius: 50%; border: 2px solid rgba(255,255,255,0.35); cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; padding: 0; flex-shrink: 0; }
-    .color-dot:hover { transform: scale(1.3); box-shadow: 0 0 0 2px rgba(255,255,255,0.5); }
-    .color-dot.active { border: 2px solid #fff; transform: scale(1.2); box-shadow: 0 0 0 2px rgba(255,255,255,0.8); }
-    /* Actual fill colors — !important ensures they're never overridden */
-    .color-violet { background-color: #a78bfa !important; }
-    .color-emerald { background-color: #10b981 !important; }
-    .color-amber { background-color: #f59e0b !important; }
+    .theme-customizer { position: fixed; top: 1.25rem; right: 1.5rem; z-index: 1000; display: flex; align-items: center; justify-content: center; border-radius: 50%; width: 2.25rem; height: 2.25rem; background: var(--card-bg); border: 1px solid var(--border-color); box-shadow: 0 4px 12px rgba(0,0,0,0.15); transition: background-color 0.3s, border-color 0.3s; }
+    .theme-customizer button { background: none; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; border-radius: 50%; color: var(--text-main); transition: background-color 0.2s; }
+    .theme-customizer button:hover { background-color: var(--accent-bg); }
 
     /* ── Chat Widget ── */
     .chat-widget-container { position: fixed; bottom: 1.5rem; right: 1.5rem; z-index: 1000; font-family: sans-serif; display: flex; flex-direction: column; align-items: flex-end; }
@@ -1047,38 +1033,101 @@ export function generateExportFilename(name: string): string {
 /** Generate a Vercel-ready static site package */
 export async function downloadPortfolioZip(
   portfolio: EnhancedPortfolio,
-  style: PortfolioStyle
+  style: PortfolioStyle,
+  accentColor?: "violet" | "emerald" | "amber" | null
 ): Promise<void> {
-  const html = generatePortfolioHTML(portfolio, style, true);
-  const styleConfig = getStyleConfig(style, style === "developer", style === "creative");
   const slug = generateExportFilename(portfolio.name);
-
+  const styleConfig = getStyleConfig(style, style === "developer", style === "creative");
   const zip = new JSZip();
-  zip.file("index.html", html);
   zip.file("style.css", styleConfig.css);
 
-  // Helper to fetch local files as blob and add to zip
+  // Helper to fetch local or remote files, decode data URLs, and add to zip
   const addAssetToZip = async (fileName: string, url: string) => {
     try {
-      const res = await fetch(url);
-      if (res.ok) {
-        const blob = await res.blob();
+      if (url.startsWith("data:")) {
+        const arr = url.split(',');
+        const mimeMatch = arr[0].match(/:(.*?);/);
+        const mime = mimeMatch ? mimeMatch[1] : "image/png";
+        const bstr = atob(arr[1]);
+        let n = bstr.length;
+        const u8arr = new Uint8Array(n);
+        while (n--) {
+          u8arr[n] = bstr.charCodeAt(n);
+        }
+        const blob = new Blob([u8arr], { type: mime });
         zip.file(fileName, blob);
+      } else {
+        const res = await fetch(url);
+        if (res.ok) {
+          const blob = await res.blob();
+          zip.file(fileName, blob);
+        }
       }
     } catch (e) {
       console.error(`Failed to add asset ${fileName} to zip:`, e);
     }
   };
 
-  // Add avatars and project images to the zip if they are local
-  const avatarUrl = portfolio.contact?.avatarUrl || "/avatar.png";
-  if (avatarUrl.startsWith("/")) {
-    const cleanAvatarName = avatarUrl.slice(1) || "avatar.png";
-    await addAssetToZip(cleanAvatarName, avatarUrl);
+  // Clone portfolio so we can modify image URLs to local relative names inside the ZIP package
+  const exportedPortfolio = JSON.parse(JSON.stringify(portfolio)) as EnhancedPortfolio;
+
+  // Process and bundle avatar image
+  const originalAvatarUrl = portfolio.contact?.avatarUrl || "/avatar.png";
+  let zipAvatarName = "avatar.png";
+  if (originalAvatarUrl.startsWith("data:")) {
+    const ext = originalAvatarUrl.match(/data:image\/(.*?);/)?.[1] || "png";
+    zipAvatarName = `avatar.${ext}`;
+    await addAssetToZip(zipAvatarName, originalAvatarUrl);
+    if (exportedPortfolio.contact) exportedPortfolio.contact.avatarUrl = `./${zipAvatarName}`;
+  } else if (originalAvatarUrl.startsWith("http://") || originalAvatarUrl.startsWith("https://")) {
+    const cleanUrl = originalAvatarUrl.split('?')[0];
+    const lastPart = cleanUrl.split('/').pop() || "";
+    const ext = lastPart.includes('.') ? lastPart.split('.').pop() || "png" : "png";
+    const cleanExt = ["png", "jpg", "jpeg", "webp", "gif"].includes(ext.toLowerCase()) ? ext : "png";
+    zipAvatarName = `avatar.${cleanExt}`;
+    await addAssetToZip(zipAvatarName, originalAvatarUrl);
+    if (exportedPortfolio.contact) exportedPortfolio.contact.avatarUrl = `./${zipAvatarName}`;
+  } else if (originalAvatarUrl.startsWith("/")) {
+    zipAvatarName = originalAvatarUrl.slice(1) || "avatar.png";
+    await addAssetToZip(zipAvatarName, originalAvatarUrl);
+    if (exportedPortfolio.contact) exportedPortfolio.contact.avatarUrl = `./${zipAvatarName}`;
   }
+
+  // Process and bundle project images
+  for (let idx = 0; idx < (portfolio.projects || []).length; idx++) {
+    const p = portfolio.projects[idx];
+    const originalProjectUrl = p.imageUrl || `/project${(idx % 3) + 1}.png`;
+    let zipProjName = `project${(idx % 3) + 1}.png`;
+
+    if (originalProjectUrl.startsWith("data:")) {
+      const ext = originalProjectUrl.match(/data:image\/(.*?);/)?.[1] || "png";
+      zipProjName = `project_${idx + 1}.${ext}`;
+      await addAssetToZip(zipProjName, originalProjectUrl);
+    } else if (originalProjectUrl.startsWith("http://") || originalProjectUrl.startsWith("https://")) {
+      const cleanUrl = originalProjectUrl.split('?')[0];
+      const lastPart = cleanUrl.split('/').pop() || "";
+      const ext = lastPart.includes('.') ? lastPart.split('.').pop() || "png" : "png";
+      const cleanExt = ["png", "jpg", "jpeg", "webp", "gif"].includes(ext.toLowerCase()) ? ext : "png";
+      zipProjName = `project_${idx + 1}.${cleanExt}`;
+      await addAssetToZip(zipProjName, originalProjectUrl);
+    } else if (originalProjectUrl.startsWith("/")) {
+      zipProjName = originalProjectUrl.slice(1) || `project${(idx % 3) + 1}.png`;
+      await addAssetToZip(zipProjName, originalProjectUrl);
+    }
+
+    if (exportedPortfolio.projects[idx]) {
+      exportedPortfolio.projects[idx].imageUrl = `./${zipProjName}`;
+    }
+  }
+
+  // Also include the default fallbacks just in case
   await addAssetToZip("project1.png", "/project1.png");
   await addAssetToZip("project2.png", "/project2.png");
   await addAssetToZip("project3.png", "/project3.png");
+
+  // Generate HTML using the mapped exportedPortfolio configuration
+  const html = generatePortfolioHTML(exportedPortfolio, style, true, accentColor);
+  zip.file("index.html", html);
 
   zip.file(
     "vercel.json",
@@ -1110,40 +1159,99 @@ export async function downloadPortfolioZip(
  */
 export async function downloadPortfolioWebsiteZip(
   portfolio: EnhancedPortfolio,
-  style: PortfolioStyle
+  style: PortfolioStyle,
+  accentColor?: "violet" | "emerald" | "amber" | null
 ): Promise<void> {
-  // Use externalCSS=false → CSS is inlined inside <style> tags in the HTML.
-  // This makes the HTML file 100% self-contained and works when opened locally,
-  // dragged into a browser, or hosted on any server without needing to resolve
-  // a separate style.css file.
-  const html = generatePortfolioHTML(portfolio, style, false);
   const slug = generateExportFilename(portfolio.name);
-
   const zip = new JSZip();
-  zip.file("index.html", html);
 
-  // Helper to fetch local files as blob and add to zip
+  // Helper to fetch local or remote files, decode data URLs, and add to zip
   const addAssetToZip = async (fileName: string, url: string) => {
     try {
-      const res = await fetch(url);
-      if (res.ok) {
-        const blob = await res.blob();
+      if (url.startsWith("data:")) {
+        const arr = url.split(',');
+        const mimeMatch = arr[0].match(/:(.*?);/);
+        const mime = mimeMatch ? mimeMatch[1] : "image/png";
+        const bstr = atob(arr[1]);
+        let n = bstr.length;
+        const u8arr = new Uint8Array(n);
+        while (n--) {
+          u8arr[n] = bstr.charCodeAt(n);
+        }
+        const blob = new Blob([u8arr], { type: mime });
         zip.file(fileName, blob);
+      } else {
+        const res = await fetch(url);
+        if (res.ok) {
+          const blob = await res.blob();
+          zip.file(fileName, blob);
+        }
       }
     } catch (e) {
       console.error(`Failed to add asset ${fileName} to zip:`, e);
     }
   };
 
-  // Add avatars and project images to the zip if they are local
-  const avatarUrl = portfolio.contact?.avatarUrl || "/avatar.png";
-  if (avatarUrl.startsWith("/")) {
-    const cleanAvatarName = avatarUrl.slice(1) || "avatar.png";
-    await addAssetToZip(cleanAvatarName, avatarUrl);
+  // Clone portfolio so we can modify image URLs to local relative names inside the ZIP package
+  const exportedPortfolio = JSON.parse(JSON.stringify(portfolio)) as EnhancedPortfolio;
+
+  // Process and bundle avatar image
+  const originalAvatarUrl = portfolio.contact?.avatarUrl || "/avatar.png";
+  let zipAvatarName = "avatar.png";
+  if (originalAvatarUrl.startsWith("data:")) {
+    const ext = originalAvatarUrl.match(/data:image\/(.*?);/)?.[1] || "png";
+    zipAvatarName = `avatar.${ext}`;
+    await addAssetToZip(zipAvatarName, originalAvatarUrl);
+    if (exportedPortfolio.contact) exportedPortfolio.contact.avatarUrl = `./${zipAvatarName}`;
+  } else if (originalAvatarUrl.startsWith("http://") || originalAvatarUrl.startsWith("https://")) {
+    const cleanUrl = originalAvatarUrl.split('?')[0];
+    const lastPart = cleanUrl.split('/').pop() || "";
+    const ext = lastPart.includes('.') ? lastPart.split('.').pop() || "png" : "png";
+    const cleanExt = ["png", "jpg", "jpeg", "webp", "gif"].includes(ext.toLowerCase()) ? ext : "png";
+    zipAvatarName = `avatar.${cleanExt}`;
+    await addAssetToZip(zipAvatarName, originalAvatarUrl);
+    if (exportedPortfolio.contact) exportedPortfolio.contact.avatarUrl = `./${zipAvatarName}`;
+  } else if (originalAvatarUrl.startsWith("/")) {
+    zipAvatarName = originalAvatarUrl.slice(1) || "avatar.png";
+    await addAssetToZip(zipAvatarName, originalAvatarUrl);
+    if (exportedPortfolio.contact) exportedPortfolio.contact.avatarUrl = `./${zipAvatarName}`;
   }
+
+  // Process and bundle project images
+  for (let idx = 0; idx < (portfolio.projects || []).length; idx++) {
+    const p = portfolio.projects[idx];
+    const originalProjectUrl = p.imageUrl || `/project${(idx % 3) + 1}.png`;
+    let zipProjName = `project${(idx % 3) + 1}.png`;
+
+    if (originalProjectUrl.startsWith("data:")) {
+      const ext = originalProjectUrl.match(/data:image\/(.*?);/)?.[1] || "png";
+      zipProjName = `project_${idx + 1}.${ext}`;
+      await addAssetToZip(zipProjName, originalProjectUrl);
+    } else if (originalProjectUrl.startsWith("http://") || originalProjectUrl.startsWith("https://")) {
+      const cleanUrl = originalProjectUrl.split('?')[0];
+      const lastPart = cleanUrl.split('/').pop() || "";
+      const ext = lastPart.includes('.') ? lastPart.split('.').pop() || "png" : "png";
+      const cleanExt = ["png", "jpg", "jpeg", "webp", "gif"].includes(ext.toLowerCase()) ? ext : "png";
+      zipProjName = `project_${idx + 1}.${cleanExt}`;
+      await addAssetToZip(zipProjName, originalProjectUrl);
+    } else if (originalProjectUrl.startsWith("/")) {
+      zipProjName = originalProjectUrl.slice(1) || `project${(idx % 3) + 1}.png`;
+      await addAssetToZip(zipProjName, originalProjectUrl);
+    }
+
+    if (exportedPortfolio.projects[idx]) {
+      exportedPortfolio.projects[idx].imageUrl = `./${zipProjName}`;
+    }
+  }
+
+  // Also include the default fallbacks just in case
   await addAssetToZip("project1.png", "/project1.png");
   await addAssetToZip("project2.png", "/project2.png");
   await addAssetToZip("project3.png", "/project3.png");
+
+  // Use externalCSS=false → CSS is inlined inside <style> tags in the HTML.
+  const html = generatePortfolioHTML(exportedPortfolio, style, false, accentColor);
+  zip.file("index.html", html);
 
   zip.file(
     "README.md",

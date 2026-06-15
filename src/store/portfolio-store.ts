@@ -9,6 +9,7 @@ import type {
   PortfolioVersion,
   ToneMode,
   EditableSection,
+  AccentColor,
 } from "@/types/portfolio";
 
 function clonePortfolio(data: EnhancedPortfolio): EnhancedPortfolio {
@@ -41,6 +42,7 @@ interface PortfolioStore extends PortfolioAppState {
     contentGaps?: PortfolioAppState["contentGaps"];
   }) => void;
   setTemplate: (template: PortfolioStyle) => void;
+  setAccentColor: (color: AccentColor | null) => void;
   setTone: (tone: ToneMode) => void;
   updateEditedField: (path: string, value: unknown) => void;
   applyEditedData: (data: EnhancedPortfolio) => void;
@@ -64,6 +66,7 @@ const initialState: PortfolioAppState = {
   aiEnhancedData: null,
   editedData: null,
   selectedTemplate: "minimal",
+  accentColor: null,
   tone: "professional",
   versions: [],
   activeVersionId: null,
@@ -123,6 +126,8 @@ export const usePortfolioStore = create<PortfolioStore>((set, get) => ({
   },
 
   setTemplate: (template) => set({ selectedTemplate: template }),
+
+  setAccentColor: (color) => set({ accentColor: color }),
 
   setTone: (tone) => set({ tone }),
 

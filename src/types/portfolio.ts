@@ -42,6 +42,7 @@ export interface Project {
   technologies: string[];
   link?: string;
   period?: string;
+  imageUrl?: string;
 }
 
 export interface Experience {
@@ -86,6 +87,12 @@ export interface EnhancedPortfolio extends ParsedResume {
   roleType: RoleType;
   improvements: string[];
   seo: SeoMeta;
+  uiOverrides?: {
+    accentColor?: AccentColor | null;
+    template?: PortfolioStyle;
+    hideMetrics?: boolean;
+    hideContact?: boolean;
+  };
 }
 
 export interface PortfolioVersion {
@@ -109,12 +116,15 @@ export interface RoleDetectionResult {
   reasoning: string;
 }
 
+export type AccentColor = "violet" | "emerald" | "amber";
+
 /** Central application state shape */
 export interface PortfolioAppState {
   userData: ParsedResume | null;
   aiEnhancedData: EnhancedPortfolio | null;
   editedData: EnhancedPortfolio | null;
   selectedTemplate: PortfolioStyle;
+  accentColor: AccentColor | null;
   tone: ToneMode;
   versions: PortfolioVersion[];
   activeVersionId: string | null;

@@ -1,7 +1,7 @@
 "use client";
 
 import { PortfolioRenderer } from "@/components/portfolio/PortfolioRenderer";
-import type { EnhancedPortfolio, PortfolioStyle } from "@/types/portfolio";
+import type { EnhancedPortfolio, PortfolioStyle, AccentColor } from "@/types/portfolio";
 import { Monitor, Smartphone } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
@@ -9,9 +9,10 @@ import { cn } from "@/lib/utils";
 interface PreviewPanelProps {
     data: EnhancedPortfolio;
     style: PortfolioStyle;
+    accentColor?: AccentColor | null;
 }
 
-export function PreviewPanel({ data, style }: PreviewPanelProps) {
+export function PreviewPanel({ data, style, accentColor }: PreviewPanelProps) {
     const [viewport, setViewport] = useState<"desktop" | "mobile">("desktop");
 
     return (
@@ -46,7 +47,7 @@ export function PreviewPanel({ data, style }: PreviewPanelProps) {
                         viewport === "mobile" ? "w-[375px]" : "w-full max-w-4xl"
                     )}
                 >
-                    <PortfolioRenderer data={data} style={style} />
+                    <PortfolioRenderer data={data} style={style} accentColor={accentColor} />
                 </div>
             </div>
         </div>
