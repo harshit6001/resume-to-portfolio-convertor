@@ -52,7 +52,7 @@ function enhanceBullet(text: string, index: number): string {
   return enhanced.endsWith(".") ? enhanced : enhanced + ".";
 }
 
-function inferRoleType(parsed: ParsedResume): RoleType {
+export function inferRoleType(parsed: ParsedResume): RoleType {
   const corpus = [
     parsed.title,
     parsed.about,
@@ -123,7 +123,7 @@ function fallbackGenerateAbout(parsed: ParsedResume, roleType: RoleType): string
   return `${intros[roleType]}${expPart}${projectPart} I bring a recruiter-ready mix of technical depth, clear communication, and outcome-focused delivery.`;
 }
 
-function fallbackEnhance(
+export function fallbackEnhance(
   parsed: ParsedResume,
   style: PortfolioStyle,
   roleType: RoleType

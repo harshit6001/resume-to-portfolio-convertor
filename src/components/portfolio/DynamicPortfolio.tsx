@@ -42,7 +42,8 @@ function EditableSectionWrapper({ section, children }: EditableSectionWrapperPro
   );
 }
 
-import { useState } from "react";
+import { usePortfolioStore } from "@/store/portfolio-store";
+import { getThemeVariables } from "@/lib/export";
 import { AIChatWidget } from "./sections/AIChatWidget";
 import { Pencil, Sun, Moon } from "lucide-react";
 
@@ -54,58 +55,58 @@ interface DynamicPortfolioProps {
   onUpdate?: (path: string, value: unknown) => void;
 }
 
-export function DynamicPortfolio({ data, style, accentColor, onUpdate }: DynamicPortfolioProps) {
+export function DynamicPortfolio({ data, style, onUpdate }: DynamicPortfolioProps) {
   const t = sectionThemes[style];
 
-  // Theme customizer overrides
-  const [accentOverride, setAccentOverride] = useState<"violet" | "emerald" | "amber" | null>(null);
-  const [isDarkOverride, setIsDarkOverride] = useState<boolean | null>(null);
+  const { accentColor, isDark, setAccentColor, setIsDark } = usePortfolioStore();
 
-  const finalAccentColor = accentOverride !== null ? accentOverride : (accentColor || (style === "developer" ? "emerald" : style === "minimal" ? "amber" : "violet"));
-  const isDark = isDarkOverride !== null ? isDarkOverride : style !== "minimal";
+  const finalAccentColor = accentColor || (style === "developer" ? "emerald" : style === "minimal" ? "amber" : "violet");
+  const finalIsDark = isDark !== null ? isDark : style !== "minimal";
+
+  const vars = getThemeVariables(style, accentColor, finalIsDark);
 
   return (
     <div
       key={style}
       id="portfolio-preview-root"
       style={{
-        backgroundColor: isDark ? (finalAccentColor === "violet" ? "#0f0f1a" : finalAccentColor === "emerald" ? "#0d1117" : "#09090b") : "#fafafa",
-        backgroundImage: isDark && finalAccentColor === "violet" ? "linear-gradient(to bottom right, #0f0f1a, #1a1033, #0d1f2d)" : undefined,
-        color: isDark ? "#f0f6fc" : "#18181b",
+        backgroundColor: vars.bgMain,
+        backgroundImage: finalIsDark && finalAccentColor === "violet" ? "linear-gradient(to bottom right, #0f0f1a, #1a1033, #0d1f2d)" : undefined,
+        color: vars.textMain,
         fontFamily: style === "developer" ? "var(--font-geist-mono)" : "var(--font-geist-sans)",
-        "--bg-main": isDark ? (finalAccentColor === "violet" ? "#0f0f1a" : finalAccentColor === "emerald" ? "#0d1117" : "#09090b") : "#fafafa",
-        "--text-main": isDark ? "#f0f6fc" : "#18181b",
-        "--text-muted": isDark ? "#8b949e" : "#52525b",
-        "--border-color": isDark ? "#30363d" : "#e4e4e7",
-        "--card-bg": isDark ? "#161b22" : "#ffffff",
-        "--accent-color": finalAccentColor === "violet" ? "#a78bfa" : finalAccentColor === "emerald" ? "#3fb950" : "#f59e0b",
-        "--accent-bg": finalAccentColor === "violet" ? "rgba(167,139,250,0.1)" : finalAccentColor === "emerald" ? "rgba(63,185,80,0.1)" : "rgba(245,158,11,0.1)",
-        "--accent-hover": finalAccentColor === "violet" ? "#f472b6" : finalAccentColor === "emerald" ? "#58a6ff" : "#f59e0b",
+        "--bg-main": vars.bgMain,
+        "--text-main": vars.textMain,
+        "--text-muted": vars.textMuted,
+        "--border-color": vars.borderColor,
+        "--card-bg": vars.cardBg,
+        "--accent-color": vars.accentColor,
+        "--accent-bg": vars.accentBg,
+        "--accent-hover": vars.accentHover,
       } as React.CSSProperties}
       className="relative min-h-full transition-colors duration-300"
     >
       {/* Floating Theme / Mode Selector */}
       <div className="absolute top-4 right-4 z-30 flex items-center gap-2 rounded-full border border-zinc-200/15 bg-zinc-950/80 p-1.5 backdrop-blur-md text-xs shadow-lg text-white">
         <button
-          onClick={() => setIsDarkOverride(!isDark)}
+          onClick={() => setIsDark(!finalIsDark)}
           className="rounded-full p-1 text-zinc-400 hover:text-white transition-colors cursor-pointer"
           title="Toggle Dark/Light Mode"
         >
-          {isDark ? <Sun className="h-3.5 w-3.5 text-amber-400" /> : <Moon className="h-3.5 w-3.5 text-slate-400" />}
+          {finalIsDark ? <Sun className="h-3.5 w-3.5 text-amber-400" /> : <Moon className="h-3.5 w-3.5 text-slate-400" />}
         </button>
         <div className="h-3.5 w-px bg-zinc-800" />
         <button
-          onClick={() => setAccentOverride("violet")}
+          onClick={() => setAccentColor("violet")}
           className={`h-3 w-3 rounded-full bg-violet-500 transition-all cursor-pointer ${finalAccentColor === "violet" ? "ring-2 ring-white scale-110" : "opacity-50"}`}
           title="Violet Theme"
         />
         <button
-          onClick={() => setAccentOverride("emerald")}
+          onClick={() => setAccentColor("emerald")}
           className={`h-3 w-3 rounded-full bg-emerald-500 transition-all cursor-pointer ${finalAccentColor === "emerald" ? "ring-2 ring-white scale-110" : "opacity-50"}`}
           title="Emerald Theme"
         />
         <button
-          onClick={() => setAccentOverride("amber")}
+          onClick={() => setAccentColor("amber")}
           className={`h-3 w-3 rounded-full bg-amber-500 transition-all cursor-pointer ${finalAccentColor === "amber" ? "ring-2 ring-white scale-110" : "opacity-50"}`}
           title="Amber Theme"
         />

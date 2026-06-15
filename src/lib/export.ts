@@ -1,4 +1,4 @@
-import type { EnhancedPortfolio, PortfolioStyle } from "@/types/portfolio";
+import type { EnhancedPortfolio, PortfolioStyle, AccentColor } from "@/types/portfolio";
 import { slugify } from "./utils";
 import JSZip from "jszip";
 import { saveAs } from "file-saver";
@@ -77,17 +77,16 @@ export function generatePortfolioHTML(
   data: EnhancedPortfolio,
   style: PortfolioStyle,
   externalCSS = false,
-  accentColor?: "violet" | "emerald" | "amber" | null
+  accentColor?: AccentColor | null,
+  isDark?: boolean
 ): string {
   const { seo, name, title, tagline, about, skills, projects, experience, education, contact } =
     data;
 
-  const scriptTag = accentColor ? `<script>window.accent = "${accentColor}";</script>` : "";
-
   const isDevStyle = style === "developer";
   const isCreativeStyle = style === "creative";
 
-  const styleConfig = getStyleConfig(style, isDevStyle, isCreativeStyle);
+  const styleConfig = getStyleConfig(style, accentColor, isDark);
 
   const skillsHtml = skills
     .map(
@@ -493,7 +492,7 @@ export function generatePortfolioHTML(
     (function() {
       // 1. Theme accent and mode switching
       window.accent = '${accentColor || (isDevStyle ? "emerald" : isCreativeStyle ? "violet" : "amber")}';
-      window.isDark = ${isDevStyle || isCreativeStyle};
+      window.isDark = ${isDark !== undefined ? isDark : (isDevStyle || isCreativeStyle)};
       const root = document.documentElement;
 
       function applyTheme() {
@@ -503,31 +502,57 @@ export function generatePortfolioHTML(
           root.style.setProperty('--text-muted', '#8b949e');
           root.style.setProperty('--border-color', '#30363d');
           root.style.setProperty('--card-bg', '#161b22');
+
+          let accColor = '#f59e0b';
+          let accBg = 'rgba(245, 158, 11, 0.1)';
+          let accHover = '#f59e0b';
+          let accAlt = '#f59e0b';
+
+          if (window.accent === 'violet') {
+            accColor = '#a78bfa';
+            accBg = 'rgba(167, 139, 250, 0.1)';
+            accHover = '#f472b6';
+            accAlt = '#f472b6';
+          } else if (window.accent === 'emerald') {
+            accColor = '#3fb950';
+            accBg = 'rgba(63, 185, 80, 0.1)';
+            accHover = '#58a6ff';
+            accAlt = '#3fb950';
+          }
+
+          root.style.setProperty('--accent-color', accColor);
+          root.style.setProperty('--accent-bg', accBg);
+          root.style.setProperty('--accent-hover', accHover);
+          root.style.setProperty('--accent-alt', accAlt);
         } else {
           root.style.setProperty('--bg-main', '#fafafa');
           root.style.setProperty('--text-main', '#18181b');
           root.style.setProperty('--text-muted', '#52525b');
           root.style.setProperty('--border-color', '#e4e4e7');
           root.style.setProperty('--card-bg', '#ffffff');
-        }
 
-        let accColor = '#7c3aed';
-        let accBg = 'rgba(124, 58, 237, 0.1)';
-        let accHover = '#f472b6';
-        if (window.accent === 'emerald') {
-          accColor = '#10b981';
-          accBg = 'rgba(16, 185, 129, 0.1)';
-          accHover = '#58a6ff';
-        } else if (window.accent === 'amber') {
-          accColor = '#d97706';
-          accBg = 'rgba(217, 119, 6, 0.1)';
-          accHover = '#f59e0b';
-        }
+          let accColor = '#d97706';
+          let accBg = 'rgba(217, 119, 6, 0.1)';
+          let accHover = '#b45309';
+          let accAlt = '#d97706';
 
-        root.style.setProperty('--accent-color', accColor);
-        root.style.setProperty('--accent-bg', accBg);
-        root.style.setProperty('--accent-hover', accHover);
-        root.style.setProperty('--accent-alt', window.accent === 'emerald' ? '#3fb950' : accHover);
+          if (window.accent === 'violet') {
+            accColor = '#7c3aed';
+            accBg = 'rgba(124, 58, 237, 0.1)';
+            accHover = '#6d28d9';
+            accAlt = '#7c3aed';
+          } else if (window.accent === 'emerald') {
+            accColor = '#10b981';
+            accBg = 'rgba(16, 185, 129, 0.1)';
+            accHover = '#059669';
+            accAlt = '#10b981';
+          }
+
+          root.style.setProperty('--accent-color', accColor);
+          root.style.setProperty('--accent-bg', accBg);
+          root.style.setProperty('--accent-hover', accHover);
+          root.style.setProperty('--accent-alt', accAlt);
+        }
 
         const toggleBtn = document.getElementById('theme-toggle-btn');
         if (toggleBtn) {
@@ -730,23 +755,110 @@ function escapeHtml(text: string | null | undefined): string {
     .replace(/"/g, "&quot;");
 }
 
+export interface ThemeVariables {
+  bgMain: string;
+  textMain: string;
+  textMuted: string;
+  borderColor: string;
+  cardBg: string;
+  accentColor: string;
+  accentBg: string;
+  accentHover: string;
+  accentAlt: string;
+}
+
+export function getThemeVariables(
+  style: PortfolioStyle,
+  accentColor: AccentColor | null,
+  isDark: boolean
+): ThemeVariables {
+  const finalAccent = accentColor || (style === "developer" ? "emerald" : style === "minimal" ? "amber" : "violet");
+  
+  if (isDark) {
+    let bgMain = "#09090b";
+    if (finalAccent === "violet") bgMain = "#0f0f1a";
+    else if (finalAccent === "emerald") bgMain = "#0d1117";
+
+    let accentColorVal = "#f59e0b";
+    let accentBg = "rgba(245, 158, 11, 0.1)";
+    let accentHover = "#f59e0b";
+    let accentAlt = "#f59e0b";
+
+    if (finalAccent === "violet") {
+      accentColorVal = "#a78bfa";
+      accentBg = "rgba(167, 139, 250, 0.1)";
+      accentHover = "#f472b6";
+      accentAlt = "#f472b6";
+    } else if (finalAccent === "emerald") {
+      accentColorVal = "#3fb950";
+      accentBg = "rgba(63, 185, 80, 0.1)";
+      accentHover = "#58a6ff";
+      accentAlt = "#3fb950";
+    }
+
+    return {
+      bgMain,
+      textMain: "#f0f6fc",
+      textMuted: "#8b949e",
+      borderColor: "#30363d",
+      cardBg: "#161b22",
+      accentColor: accentColorVal,
+      accentBg,
+      accentHover,
+      accentAlt,
+    };
+  } else {
+    let accentColorVal = "#d97706";
+    let accentBg = "rgba(217, 119, 6, 0.1)";
+    let accentHover = "#b45309";
+    let accentAlt = "#d97706";
+
+    if (finalAccent === "violet") {
+      accentColorVal = "#7c3aed";
+      accentBg = "rgba(124, 58, 237, 0.1)";
+      accentHover = "#6d28d9";
+      accentAlt = "#7c3aed";
+    } else if (finalAccent === "emerald") {
+      accentColorVal = "#10b981";
+      accentBg = "rgba(16, 185, 129, 0.1)";
+      accentHover = "#059669";
+      accentAlt = "#10b981";
+    }
+
+    return {
+      bgMain: "#fafafa",
+      textMain: "#18181b",
+      textMuted: "#52525b",
+      borderColor: "#e4e4e7",
+      cardBg: "#ffffff",
+      accentColor: accentColorVal,
+      accentBg,
+      accentHover,
+      accentAlt,
+    };
+  }
+}
+
 export function getStyleConfig(
   style: PortfolioStyle,
-  isDevStyle: boolean,
-  isCreativeStyle: boolean
+  accentColor?: AccentColor | null,
+  isDark?: boolean
 ): { css: string; fontQuery: string } {
+  const finalIsDark = isDark !== undefined ? isDark : style !== "minimal";
+  const vars = getThemeVariables(style, accentColor || null, finalIsDark);
+
   const base = `
     /* ── CSS Variables ── */
     :root {
-      --bg-main: ${isDevStyle ? "#0d1117" : isCreativeStyle ? "#0f0f1a" : "#fafafa"};
-      --text-main: ${isDevStyle ? "#c9d1d9" : isCreativeStyle ? "#f0f0f5" : "#18181b"};
-      --text-muted: ${isDevStyle ? "#8b949e" : isCreativeStyle ? "#a78bfa" : "#71717a"};
-      --border-color: ${isDevStyle ? "#30363d" : isCreativeStyle ? "rgba(167, 139, 250, 0.2)" : "#e4e4e7"};
-      --card-bg: ${isDevStyle ? "#161b22" : isCreativeStyle ? "rgba(255, 255, 255, 0.05)" : "#ffffff"};
-      --accent-color: ${isDevStyle ? "#a78bfa" : isCreativeStyle ? "#a78bfa" : "#d97706"};
-      --accent-bg: ${isDevStyle ? "rgba(167, 139, 250, 0.1)" : isCreativeStyle ? "rgba(167, 139, 250, 0.15)" : "rgba(217, 119, 6, 0.1)"};
-      --accent-hover: ${isDevStyle ? "#58a6ff" : isCreativeStyle ? "#f472b6" : "#f59e0b"};
-      --accent-alt: ${isDevStyle ? "#3fb950" : isCreativeStyle ? "#f472b6" : "#f59e0b"};
+      --bg-main: ${vars.bgMain};
+      --text-main: ${vars.textMain};
+      --text-muted: ${vars.textMuted};
+      --border-color: ${vars.borderColor};
+      --card-bg: ${vars.cardBg};
+      --accent-color: ${vars.accentColor};
+      --accent-bg: ${vars.accentBg};
+      --accent-hover: ${vars.accentHover};
+      --accent-alt: ${vars.accentAlt};
     }
 
     /* ── Reset ── */
@@ -1034,10 +1146,11 @@ export function generateExportFilename(name: string): string {
 export async function downloadPortfolioZip(
   portfolio: EnhancedPortfolio,
   style: PortfolioStyle,
-  accentColor?: "violet" | "emerald" | "amber" | null
+  accentColor?: AccentColor | null,
+  isDark?: boolean
 ): Promise<void> {
   const slug = generateExportFilename(portfolio.name);
-  const styleConfig = getStyleConfig(style, style === "developer", style === "creative");
+  const styleConfig = getStyleConfig(style, accentColor, isDark);
   const zip = new JSZip();
   zip.file("style.css", styleConfig.css);
 
@@ -1126,7 +1239,7 @@ export async function downloadPortfolioZip(
   await addAssetToZip("project3.png", "/project3.png");
 
   // Generate HTML using the mapped exportedPortfolio configuration
-  const html = generatePortfolioHTML(exportedPortfolio, style, true, accentColor);
+  const html = generatePortfolioHTML(exportedPortfolio, style, true, accentColor, isDark);
   zip.file("index.html", html);
 
   zip.file(
@@ -1160,7 +1273,8 @@ export async function downloadPortfolioZip(
 export async function downloadPortfolioWebsiteZip(
   portfolio: EnhancedPortfolio,
   style: PortfolioStyle,
-  accentColor?: "violet" | "emerald" | "amber" | null
+  accentColor?: AccentColor | null,
+  isDark?: boolean
 ): Promise<void> {
   const slug = generateExportFilename(portfolio.name);
   const zip = new JSZip();
@@ -1250,7 +1364,7 @@ export async function downloadPortfolioWebsiteZip(
   await addAssetToZip("project3.png", "/project3.png");
 
   // Use externalCSS=false → CSS is inlined inside <style> tags in the HTML.
-  const html = generatePortfolioHTML(exportedPortfolio, style, false, accentColor);
+  const html = generatePortfolioHTML(exportedPortfolio, style, false, accentColor, isDark);
   zip.file("index.html", html);
 
   zip.file(

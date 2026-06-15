@@ -92,6 +92,7 @@ export interface EnhancedPortfolio extends ParsedResume {
     template?: PortfolioStyle;
     hideMetrics?: boolean;
     hideContact?: boolean;
+    isDark?: boolean | null;
   };
 }
 
@@ -125,6 +126,7 @@ export interface PortfolioAppState {
   editedData: EnhancedPortfolio | null;
   selectedTemplate: PortfolioStyle;
   accentColor: AccentColor | null;
+  isDark: boolean | null;
   tone: ToneMode;
   versions: PortfolioVersion[];
   activeVersionId: string | null;

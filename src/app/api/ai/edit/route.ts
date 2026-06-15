@@ -40,7 +40,7 @@ Follow these strict constraints:
 - NEVER invent new employers or degrees unless the user specifically asks you to add a new job/degree.
 - Keep links, URLs, and structures intact.
 - Keep dates intact unless instructed otherwise.
-- Preserve all fields that are not affected by the user's instructions.
+- Preserve all fields that are not affected by the user's instructions. Specifically, do NOT modify the template or accentColor in the uiOverrides object unless the user explicitly requested a change to the styling, template, theme, or color in their command. Keep them exactly as they are in the current portfolio JSON.
 - If the user asks to generate, change, or replace any image (avatar/profile picture or project image), you MUST construct and assign the Pollinations URL.
 - Ensure the output strictly conforms to the JSON schema. Do not return markdown, comments, or explanations outside the JSON object.
 

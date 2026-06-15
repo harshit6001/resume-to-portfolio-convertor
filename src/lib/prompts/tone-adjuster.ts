@@ -7,9 +7,9 @@ Return ONLY valid JSON with the same structure as the input portfolio content:
   "tagline": "string",
   "about": "string",
   "skills": [{ "category": "string", "items": ["string"] }],
-  "projects": [{ "name", "description", "highlights", "technologies", "link", "period" }],
-  "experience": [{ "company", "role", "period", "location", "description", "achievements" }],
-  "education": [{ "institution", "degree", "period", "details" }]
+  "projects": [{ "name": "string", "description": "string", "highlights": ["string"], "technologies": ["string"], "link": "string | null", "period": "string | null" }],
+  "experience": [{ "company": "string", "role": "string", "period": "string", "location": "string | null", "description": "string", "achievements": ["string"] }],
+  "education": [{ "institution": "string", "degree": "string", "period": "string", "details": "string | null" }]
 }
 
 Tone modes:

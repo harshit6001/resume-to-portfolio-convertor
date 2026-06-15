@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { runPortfolioPipeline } from "@/lib/ai/pipeline";
+import { runPortfolioPipeline, inferRoleType, fallbackEnhance } from "@/lib/ai/pipeline";
 import { isAIEnabled } from "@/lib/ai/client";
 import { parseResumeText, extractTextFromFile, extractPhotoFromFile } from "@/lib/resume-parser";
 import { emailResume } from "@/lib/notify";
@@ -83,18 +83,9 @@ export async function POST(request: NextRequest) {
       userData.contact = { ...userData.contact, avatarUrl: extractedPhotoUrl };
     }
 
-    const portfolio = {
-      ...userData,
-      tagline: userData.title || "Professional Portfolio",
-      about: userData.about || "Experienced professional ready for new opportunities.",
-      roleType: "general" as const,
-      improvements: ["Add OPENAI_API_KEY for full AI enhancement"],
-      seo: {
-        title: `${userData.name} | Portfolio`,
-        description: `${userData.name} — professional portfolio`,
-        keywords: [userData.name],
-      },
-    };
+    const roleType = inferRoleType(userData);
+    const portfolio = fallbackEnhance(userData, style, roleType);
+    portfolio.improvements = ["Add OPENAI_API_KEY for full AI enhancement"];
 
     return NextResponse.json({
       userData,

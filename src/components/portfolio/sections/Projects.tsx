@@ -1,7 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 import { useState } from "react";
 import type { EnhancedPortfolio, PortfolioStyle } from "@/types/portfolio";
-import { ExternalLink, FolderGit2, Sparkles, Search, Camera, Upload } from "lucide-react";
+import { ExternalLink, FolderGit2, Sparkles, Search, Camera } from "lucide-react";
 import { sectionThemes } from "./theme";
 
 interface ProjectsSectionProps {

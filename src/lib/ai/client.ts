@@ -30,8 +30,12 @@ export async function callOpenAI<T>(
   if (!client) return null;
 
   try {
+    const isRouter = !!process.env.OPENROUTER_API_KEY;
+    const defaultModel = isRouter ? "openai/gpt-4o-mini" : "gpt-4o-mini";
+    const model = process.env.OPENAI_MODEL || defaultModel;
+
     const response = await client.chat.completions.create({
-      model: process.env.OPENAI_MODEL || "openai/gpt-4o-mini",
+      model,
       messages: [
         { role: "system", content: systemPrompt },
         { role: "user", content: userPrompt },

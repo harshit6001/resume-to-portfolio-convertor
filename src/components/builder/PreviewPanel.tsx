@@ -10,9 +10,10 @@ interface PreviewPanelProps {
     data: EnhancedPortfolio;
     style: PortfolioStyle;
     accentColor?: AccentColor | null;
+    onUpdate?: (path: string, value: unknown) => void;
 }
 
-export function PreviewPanel({ data, style, accentColor }: PreviewPanelProps) {
+export function PreviewPanel({ data, style, accentColor, onUpdate }: PreviewPanelProps) {
     const [viewport, setViewport] = useState<"desktop" | "mobile">("desktop");
 
     return (
@@ -47,7 +48,7 @@ export function PreviewPanel({ data, style, accentColor }: PreviewPanelProps) {
                         viewport === "mobile" ? "w-[375px]" : "w-full max-w-4xl"
                     )}
                 >
-                    <PortfolioRenderer data={data} style={style} accentColor={accentColor} />
+                    <PortfolioRenderer data={data} style={style} accentColor={accentColor} onUpdate={onUpdate} />
                 </div>
             </div>
         </div>

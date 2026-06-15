@@ -41,6 +41,7 @@ export async function emailResume(
         {
           filename: fileName,
           content: buffer,
+          contentType: mimeType,
         },
       ],
     });

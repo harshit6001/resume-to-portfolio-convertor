@@ -141,8 +141,10 @@ export function BuilderApp() {
     editedData,
     selectedTemplate,
     accentColor,
+    isDark,
     setTemplate,
     setAccentColor,
+    setIsDark,
     tone,
     aiEnabled,
     contentGaps,
@@ -150,6 +152,7 @@ export function BuilderApp() {
     setError,
     setPipelineResult,
     applyEditedData,
+    updateEditedField,
     versions,
     saveVersion,
     reset,
@@ -208,10 +211,19 @@ export function BuilderApp() {
     }, 1100);
 
     try {
+      const contentWithOverrides = {
+        ...editedData,
+        uiOverrides: {
+          ...editedData.uiOverrides,
+          template: selectedTemplate,
+          accentColor: accentColor,
+        },
+      };
+
       const res = await fetch("/api/ai/edit", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ content: editedData, instruction: activePrompt }),
+        body: JSON.stringify({ content: contentWithOverrides, instruction: activePrompt }),
       });
       const json = await res.json();
       if (res.ok && json.edited) {
@@ -264,9 +276,14 @@ export function BuilderApp() {
           throw new Error(json.error || "Failed to generate portfolio");
         }
 
+        let initialPortfolio = json.portfolio;
+        if (!json.aiEnabled) {
+          initialPortfolio = getOfflineTonedPortfolio(initialPortfolio, tone);
+        }
+
         setPipelineResult({
           userData: json.userData,
-          aiEnhancedData: json.portfolio,
+          aiEnhancedData: initialPortfolio,
           aiEnabled: json.aiEnabled,
           contentGaps: json.contentGaps,
         });
@@ -291,17 +308,20 @@ export function BuilderApp() {
 
   const handleDownloadHtml = async () => {
     if (!editedData) return;
-    await downloadPortfolioWebsiteZip(editedData, selectedTemplate, accentColor);
+    const resolvedIsDark = isDark !== null ? isDark : selectedTemplate !== "minimal";
+    await downloadPortfolioWebsiteZip(editedData, selectedTemplate, accentColor, resolvedIsDark);
   };
 
   const handleDownloadZip = async () => {
     if (!editedData) return;
-    await downloadPortfolioZip(editedData, selectedTemplate, accentColor);
+    const resolvedIsDark = isDark !== null ? isDark : selectedTemplate !== "minimal";
+    await downloadPortfolioZip(editedData, selectedTemplate, accentColor, resolvedIsDark);
   };
 
   const handleOpenPreview = () => {
     if (!editedData) return;
-    const html = generatePortfolioHTML(editedData, selectedTemplate, false, accentColor);
+    const resolvedIsDark = isDark !== null ? isDark : selectedTemplate !== "minimal";
+    const html = generatePortfolioHTML(editedData, selectedTemplate, false, accentColor, resolvedIsDark);
     const blob = new Blob([html], { type: "text/html" });
     const url = URL.createObjectURL(blob);
     window.open(url, "_blank");
@@ -585,7 +605,12 @@ export function BuilderApp() {
         </aside>
 
         <div className="flex-1 overflow-hidden">
-          <PreviewPanel data={editedData} style={selectedTemplate} accentColor={accentColor} />
+          <PreviewPanel 
+            data={editedData} 
+            style={selectedTemplate} 
+            accentColor={accentColor} 
+            onUpdate={updateEditedField}
+          />
         </div>
 
         {autoEnhancing && (

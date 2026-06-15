@@ -36,9 +36,9 @@ Return ONLY valid JSON matching this schema:
   "tagline": "string",
   "about": "string",
   "skills": [{ "category": "string", "items": ["string"] }],
-  "projects": [{ "name", "description", "highlights": ["string"], "technologies": ["string"], "link", "period" }],
-  "experience": [{ "company", "role", "period", "location", "description", "achievements": ["string"] }],
-  "education": [{ "institution", "degree", "period", "details" }],
+  "projects": [{ "name": "string", "description": "string", "highlights": ["string"], "technologies": ["string"], "link": "string | null", "period": "string | null" }],
+  "experience": [{ "company": "string", "role": "string", "period": "string", "location": "string | null", "description": "string", "achievements": ["string"] }],
+  "education": [{ "institution": "string", "degree": "string", "period": "string", "details": "string | null" }],
   "seo": {
     "title": "string",
     "description": "string (155 chars max)",

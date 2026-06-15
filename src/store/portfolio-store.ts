@@ -43,6 +43,7 @@ interface PortfolioStore extends PortfolioAppState {
   }) => void;
   setTemplate: (template: PortfolioStyle) => void;
   setAccentColor: (color: AccentColor | null) => void;
+  setIsDark: (isDark: boolean | null) => void;
   setTone: (tone: ToneMode) => void;
   updateEditedField: (path: string, value: unknown) => void;
   applyEditedData: (data: EnhancedPortfolio) => void;
@@ -67,6 +68,7 @@ const initialState: PortfolioAppState = {
   editedData: null,
   selectedTemplate: "minimal",
   accentColor: null,
+  isDark: null,
   tone: "professional",
   versions: [],
   activeVersionId: null,
@@ -129,6 +131,8 @@ export const usePortfolioStore = create<PortfolioStore>((set, get) => ({
 
   setAccentColor: (color) => set({ accentColor: color }),
 
+  setIsDark: (isDark) => set({ isDark }),
+
   setTone: (tone) => set({ tone }),
 
   updateEditedField: (path, value) => {
@@ -164,6 +168,8 @@ export const usePortfolioStore = create<PortfolioStore>((set, get) => ({
       selectedTemplate: version.template,
       tone: version.tone,
       activeVersionId: versionId,
+      accentColor: version.data.uiOverrides?.accentColor ?? null,
+      isDark: version.data.uiOverrides?.isDark ?? null,
     });
   },
 

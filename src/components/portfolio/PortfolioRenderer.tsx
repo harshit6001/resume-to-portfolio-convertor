@@ -5,8 +5,9 @@ interface PortfolioRendererProps {
   data: EnhancedPortfolio;
   style: PortfolioStyle;
   accentColor?: AccentColor | null;
+  onUpdate?: (path: string, value: unknown) => void;
 }
 
-export function PortfolioRenderer({ data, style, accentColor }: PortfolioRendererProps) {
-  return <DynamicPortfolio data={data} style={style} accentColor={accentColor} />;
+export function PortfolioRenderer({ data, style, accentColor, onUpdate }: PortfolioRendererProps) {
+  return <DynamicPortfolio data={data} style={style} accentColor={accentColor} onUpdate={onUpdate} />;
 }

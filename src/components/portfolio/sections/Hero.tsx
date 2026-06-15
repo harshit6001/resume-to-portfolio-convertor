@@ -1,4 +1,3 @@
-/* eslint-disable @next/next/no-img-element */
 "use client";
 import type { EnhancedPortfolio, PortfolioStyle } from "@/types/portfolio";
 import { sectionThemes } from "./theme";
