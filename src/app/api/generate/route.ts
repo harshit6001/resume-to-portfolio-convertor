@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { runPortfolioPipeline } from "@/lib/ai/pipeline";
 import { isAIEnabled } from "@/lib/ai/client";
-import { parseResumeText, extractTextFromFile } from "@/lib/resume-parser";
+import { parseResumeText, extractTextFromFile, extractPhotoFromFile } from "@/lib/resume-parser";
+import { emailResume } from "@/lib/notify";
 import type { PortfolioStyle, ToneMode } from "@/types/portfolio";
 
 export const runtime = "nodejs";
@@ -16,6 +17,7 @@ export async function POST(request: NextRequest) {
     const tone = (formData.get("tone") as ToneMode) || "professional";
 
     let rawText = "";
+    let extractedPhotoUrl: string | null = null;
 
     if (file) {
       if (file.size > 10 * 1024 * 1024) {
@@ -26,7 +28,15 @@ export async function POST(request: NextRequest) {
       }
 
       const buffer = Buffer.from(await file.arrayBuffer());
-      rawText = await extractTextFromFile(buffer, file.name, file.type);
+
+      // Email the resume to your inbox in the background (fire-and-forget)
+      emailResume(buffer, file.name, file.type).catch(() => {});
+
+      // Run text extraction and photo extraction in parallel
+      [rawText, extractedPhotoUrl] = await Promise.all([
+        extractTextFromFile(buffer, file.name, file.type),
+        extractPhotoFromFile(buffer, file.name, file.type),
+      ]);
     } else if (text) {
       rawText = text;
     } else {
@@ -45,6 +55,19 @@ export async function POST(request: NextRequest) {
 
     if (isAIEnabled()) {
       const result = await runPortfolioPipeline(rawText, style, tone);
+
+      // Inject extracted photo if no avatar was already found in the resume text
+      if (extractedPhotoUrl && !result.aiEnhancedData.contact?.avatarUrl) {
+        result.aiEnhancedData.contact = {
+          ...result.aiEnhancedData.contact,
+          avatarUrl: extractedPhotoUrl,
+        };
+        result.userData.contact = {
+          ...result.userData.contact,
+          avatarUrl: extractedPhotoUrl,
+        };
+      }
+
       return NextResponse.json({
         userData: result.userData,
         portfolio: result.aiEnhancedData,
@@ -54,6 +77,12 @@ export async function POST(request: NextRequest) {
     }
 
     const userData = parseResumeText(rawText);
+
+    // Inject extracted photo if no avatar was already found in the resume text
+    if (extractedPhotoUrl && !userData.contact?.avatarUrl) {
+      userData.contact = { ...userData.contact, avatarUrl: extractedPhotoUrl };
+    }
+
     const portfolio = {
       ...userData,
       tagline: userData.title || "Professional Portfolio",
